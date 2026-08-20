@@ -907,7 +907,7 @@ def run_cmd_json(cmd):
     return json.loads(data)
 
 def dbus_json(cmd):
-    return run_cmd_json("sudo /home/mobian/g/MicroPythonOS/phone.py " + cmd)
+    return run_cmd_json("sudo /home/mobian/g/MushOS/phone.py " + cmd)
 
 class LocationManagerDBUS:
     def poll(self):

@@ -1,4 +1,4 @@
-"""WebServer control for MicroPythonOS."""
+"""WebServer control for MushOS."""
 
 import logging
 logger = logging.getLogger(__name__)

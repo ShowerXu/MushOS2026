@@ -1,4 +1,4 @@
-# LightsManager - Simple LED Control Service for MicroPythonOS
+# LightsManager - Simple LED Control Service for MushOS
 # Provides one-shot LED control for NeoPixel RGB LEDs
 # Apps implement custom animations using the update_frame() pattern
 

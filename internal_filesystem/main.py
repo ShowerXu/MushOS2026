@@ -36,4 +36,4 @@ except Exception as e:
     import time
     time.sleep(5) # sleep so the user has time to connect to serial console
     sys.print_exception(e) # print it after the sleep so user can see it on serial console
-    print("MicroPythonOS exiting.")
+    print("MushOS exiting.")

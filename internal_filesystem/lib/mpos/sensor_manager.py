@@ -1,4 +1,4 @@
-"""Android-inspired SensorManager for MicroPythonOS.
+"""Android-inspired SensorManager for MushOS.
 
 Provides unified access to IMU sensors (QMI8658, WSEN_ISDS) and other sensors.
 Follows singleton pattern with class method delegation.
@@ -15,7 +15,7 @@ Example usage:
         ax, ay, az = SensorManager.read_sensor(accel)  # Returns m/s²
 
 MIT License
-Copyright (c) 2024 MicroPythonOS contributors
+Copyright (c) 2024 MushOS contributors
 """
 
 import logging

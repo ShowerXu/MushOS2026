@@ -1,5 +1,5 @@
 """
-Graphical testing utilities for MicroPythonOS.
+Graphical testing utilities for MushOS.
 
 This module provides utilities for graphical/visual testing and UI automation
 that work on both desktop (unix/macOS) and device (ESP32). These functions can
@@ -741,7 +741,7 @@ def print_screen_labels(obj):
         print_screen_labels(lv.screen_active())
         # Output:
         # Found 5 text widgets on screen:
-        #   0: MicroPythonOS (hex: 4d6963726f507974686f6e4f53)
+        #   0: MushOS (hex: 4d6963726f507974686f6e4f53)
         #   1: Version 0.3.3 (hex: 56657273696f6e20302e332e33)
         #   2: ⚙ (hex: e29a99)  <- lv.SYMBOL.SETTINGS
         #   3: Force Update (hex: 466f7263652055706461746)

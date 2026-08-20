@@ -119,7 +119,7 @@ class ImuManager:
             Sensor(
                 name="Mock Accelerometer",
                 sensor_type=TYPE_ACCELEROMETER,
-                vendor="MicroPythonOS",
+                vendor="MushOS",
                 version=1,
                 max_range="±8G (78.4 m/s²)",
                 resolution="0.0024 m/s²",
@@ -128,7 +128,7 @@ class ImuManager:
             Sensor(
                 name="Mock Gyroscope",
                 sensor_type=TYPE_GYROSCOPE,
-                vendor="MicroPythonOS",
+                vendor="MushOS",
                 version=1,
                 max_range="±256 deg/s",
                 resolution="0.002 deg/s",
@@ -137,7 +137,7 @@ class ImuManager:
             Sensor(
                 name="Mock Magnetometer",
                 sensor_type=TYPE_MAGNETIC_FIELD,
-                vendor="MicroPythonOS",
+                vendor="MushOS",
                 version=1,
                 max_range="±100 uT",
                 resolution="0.1 uT",
@@ -146,7 +146,7 @@ class ImuManager:
             Sensor(
                 name="Mock Temperature",
                 sensor_type=TYPE_IMU_TEMPERATURE,
-                vendor="MicroPythonOS",
+                vendor="MushOS",
                 version=1,
                 max_range="-40°C to +85°C",
                 resolution="0.1°C",

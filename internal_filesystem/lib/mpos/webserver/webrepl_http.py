@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 from mpos.ui.display_metrics import DisplayMetrics
 from mpos.ui.testing import capture_screenshot
 
-WEBREPL_HTML_PATH = "builtin/html/webrepl_inlined_minified.html.gz" # built by MicroPythonOS/webrepl/inline_minify_webrepl.py
+WEBREPL_HTML_PATH = "builtin/html/webrepl_inlined_minified.html.gz" # built by MushOS/webrepl/inline_minify_webrepl.py
 
 WEBREPL_ASSETS = {
     b"/": (WEBREPL_HTML_PATH, b"text/html"),
@@ -69,7 +69,7 @@ def _is_websocket_request(headers):
 
 def _send_response(cl, status, content_type, body, extra_headers=None):
     cl.send(b"HTTP/1.0 " + status + b"\r\n")
-    cl.send(b"Server: MicroPythonOS\r\n")
+    cl.send(b"Server: MushOS\r\n")
     cl.send(b"Content-Type: " + content_type + b"\r\n")
     if extra_headers:
         for header in extra_headers:

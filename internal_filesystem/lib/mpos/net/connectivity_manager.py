@@ -1,4 +1,4 @@
-# connectivity.py — Universal ConnectivityManager for MicroPythonOS
+# connectivity.py — Universal ConnectivityManager for MushOS
 # Works on ESP32, ESP8266, Unix/Desktop, and anything else
 
 import logging

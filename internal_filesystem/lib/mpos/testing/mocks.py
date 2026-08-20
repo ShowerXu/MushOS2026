@@ -1,5 +1,5 @@
 """
-Mock implementations for MicroPythonOS testing.
+Mock implementations for MushOS testing.
 
 This module provides mock implementations of hardware and system modules
 for testing without actual hardware. Works on both desktop and device.

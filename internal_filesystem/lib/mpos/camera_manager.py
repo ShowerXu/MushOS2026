@@ -1,4 +1,4 @@
-"""Android-inspired CameraManager for MicroPythonOS.
+"""Android-inspired CameraManager for MushOS.
 
 Provides unified access to camera devices (back-facing, front-facing, external).
 Follows singleton pattern with class method delegation.
@@ -19,7 +19,7 @@ Example usage:
         if __debug__: logger.debug("we have a camera!")
 
 MIT License
-Copyright (c) 2024 MicroPythonOS contributors
+Copyright (c) 2024 MushOS contributors
 """
 
 import logging

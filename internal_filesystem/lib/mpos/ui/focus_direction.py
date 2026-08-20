@@ -23,7 +23,7 @@ def _rect_center(x1, y1, x2, y2):
 # ---------------------------------------------------------------------------
 # Android FocusFinder algorithm (ported from AOSP FocusFinder.java)
 #
-# Direction convention (matches the rest of MicroPythonOS):
+# Direction convention (matches the rest of MushOS):
 #   0   = UP
 #   90  = RIGHT
 #   180 = DOWN

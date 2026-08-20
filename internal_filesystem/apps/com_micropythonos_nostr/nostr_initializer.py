@@ -203,7 +203,7 @@ def configure_nostr_manager(prefs, manager, store=None, dm_since=None):
 
     if store is not None:
         _load_channel_directory(store)
-        # Migration (v0.15.1): fix stale "#MicroPythonOS" title leftover from
+        # Migration (v0.15.1): fix stale "#MushOS" title leftover from
         # earlier versions that incorrectly prefixed the default channel name
         # with "#". Remove after 2026-08-20.
         chat_id = channel_chat_id(DEFAULT_CHANNEL_ID)

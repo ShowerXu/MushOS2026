@@ -1,5 +1,5 @@
 """
-Custom keyboard for MicroPythonOS.
+Custom keyboard for MushOS.
 
 This module provides an enhanced on-screen keyboard with better layout,
 more characters (including emoticons), and improved usability compared

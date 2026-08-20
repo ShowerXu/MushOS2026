@@ -2,7 +2,7 @@
 #
 # `i2c` is any machine.I2C-style object exposing readfrom_mem/writeto_mem.
 # datetime() uses the tuple (year, month, day, weekday, hour, minute, second),
-# weekday 0..6, full 4-digit year. This is the shape MicroPythonOS expects of a
+# weekday 0..6, full 4-digit year. This is the shape MushOS expects of a
 # TimeZone.rtc driver (see drivers/rtc/pcf8563.py).
 from micropython import const
 

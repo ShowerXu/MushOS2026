@@ -1,5 +1,5 @@
 """
-MicroPythonOS Testing Module
+MushOS Testing Module
 
 Provides mock implementations for testing without actual hardware.
 These mocks work on both desktop (unit tests) and device (integration tests).

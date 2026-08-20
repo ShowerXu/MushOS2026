@@ -25,10 +25,10 @@ CHAT_ID_DM_PREFIX = "dm_"
 CHAT_ID_CHANNEL_PREFIX = "channel_"
 CHAT_ID_NIP17_PREFIX = "nip17_"
 
-# Auto-joined public channel (#MicroPythonOS, NIP-28).
+# Auto-joined public channel (#MushOS, NIP-28).
 DEFAULT_CHANNEL_ID = "cbf20cd9212aea3c7d399777b69cec750a0109edd831001a5011d892268a9481"
-DEFAULT_CHANNEL_NAME = "MicroPythonOS"
-DEFAULT_CHANNEL_ABOUT = "MicroPythonOS community chat"
+DEFAULT_CHANNEL_NAME = "MushOS"
+DEFAULT_CHANNEL_ABOUT = "MushOS community chat"
 
 
 def _peer_sort_key(own_pubkey, peer_pubkey):

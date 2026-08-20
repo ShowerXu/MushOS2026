@@ -1,1 +1,1 @@
-# mpos.net module - Networking utilities for MicroPythonOS
+# mpos.net module - Networking utilities for MushOS

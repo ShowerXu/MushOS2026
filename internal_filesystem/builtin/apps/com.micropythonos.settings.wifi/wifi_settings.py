@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 class WiFiSettings(Activity):
     """
-    WiFi settings app for MicroPythonOS.
+    WiFi settings app for MushOS.
     
     This is a pure UI layer - all WiFi operations are delegated to WifiService.
     """

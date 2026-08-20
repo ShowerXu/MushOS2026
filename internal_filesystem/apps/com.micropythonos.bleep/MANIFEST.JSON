@@ -1,6 +1,6 @@
 {
   "name": "BLEep",
-  "publisher": "MicroPythonOS",
+  "publisher": "MushOS",
   "short_description": "Find and befriend nearby BLE users",
   "long_description": "BLE-powered friend maker. Find nearby users, send friend requests, accept/deny incoming ones, and track your friend count. Unfriend when you drift apart.",
   "fullname": "com.micropythonos.bleep",

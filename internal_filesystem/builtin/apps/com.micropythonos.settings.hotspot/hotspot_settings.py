@@ -12,7 +12,7 @@ class HotspotSettings(Activity):
     """
 
     DEFAULTS = {
-        "ssid": "MicroPythonOS",
+        "ssid": "MushOS",
         "password": "",
         "authmode": "none",
     }

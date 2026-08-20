@@ -1,4 +1,4 @@
-"""async_dns.py -- Off-loop DNS resolution helper for MicroPythonOS.
+"""async_dns.py -- Off-loop DNS resolution helper for MushOS.
 
 Offloads socket.getaddrinfo to a _thread worker so the asyncio event loop
 stays alive during blocking DNS lookups on ESP32-S3.

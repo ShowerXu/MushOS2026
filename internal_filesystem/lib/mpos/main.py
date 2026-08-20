@@ -1,5 +1,5 @@
-# Uncomment this line if you want to be dropped to a REPL shell without loading any MicroPythonOS code:
-# raise RuntimeError("/lib/mpos/main.py: dropping to REPL shell without loading any MicroPythonOS code")
+# Uncomment this line if you want to be dropped to a REPL shell without loading any MushOS code:
+# raise RuntimeError("/lib/mpos/main.py: dropping to REPL shell without loading any MushOS code")
 
 import lvgl as lv
 import os
@@ -26,7 +26,7 @@ def _get_boot_splash_src():
         os.stat("data/images/boot_splash.png")
         return custom_splash
     except Exception:
-        return "M:builtin/res/MicroPythonOS-logo-white-long-w296.png"
+        return "M:builtin/res/MushOS-logo-white-long-w296.png"
 
 def init_rootscreen():
     """Initialize the root screen and set display metrics."""
@@ -164,6 +164,14 @@ def restore_i2c(sda, scl):
     Pin(sda, Pin.IN, pull=None)
     Pin(scl, Pin.IN, pull=None)
 
+# MushBot 自定义开发板：把下面的 MAC OUI 前 3 字节（machine.unique_id() 的前 3 字节）
+# 改成你 ESP32-S3 的实际值，detect_board() 即可自动识别并加载 mpos.board.mushbot。
+# 若不想绑定 MAC，也可改用方法B：在设备端 main.py 里先
+#   from mpos.device_info import DeviceInfo
+#   DeviceInfo.set_hardware_id("mushbot")
+#   import mpos.main
+MUSHBOT_MAC_PREFIX = b'\x00\x00\x00'  # TODO: 替换为你的 ESP32-S3 的 MAC 前缀
+
 def detect_board():
     import sys
     if sys.platform == "linux" or sys.platform == "darwin": # linux and macOS
@@ -185,6 +193,10 @@ def detect_board():
         if __debug__: logger.debug("squixl ?")
         if unique_id_prefixes == b'\xb8\xf8\x62':  # Unexpected Maker SQUiXL (MAC b8:f8:62)
             return "squixl"
+
+        if __debug__: logger.debug("mushbot ?")
+        if unique_id_prefixes == MUSHBOT_MAC_PREFIX:
+            return "mushbot"
 
         # Do I2C-based board detection
         # IMPORTANT: ESP32 GPIO 6-11 are internal SPI flash pins and will cause WDT reset if used.
@@ -275,8 +287,14 @@ def detect_board():
 
         if __debug__: logger.debug("Unknown board: couldn't detect known I2C devices or unique_id prefix")
 
+        # MushBot 专属固件兜底：这是为 mushbot 板单独定制的固件，
+        # 若前面未匹配到任何已知板，直接加载 mpos.board.mushbot，
+        # 免去 MAC 前缀绑定或方法B 部署，首次启动即可进入 MushOS。
+        if __debug__: logger.debug("Falling back to mushbot (dedicated MushOS build)")
+        return "mushbot"
+
 # EXECUTION STARTS HERE
-if __debug__: logger.debug("MicroPythonOS %s running lib/mpos/main.py", BuildInfo.version.release)
+if __debug__: logger.debug("MushOS %s running lib/mpos/main.py", BuildInfo.version.release)
 
 # Needed to load the logo and firmware files for boards from storage:
 try:

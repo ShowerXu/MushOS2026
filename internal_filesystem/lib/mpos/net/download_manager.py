@@ -1,5 +1,5 @@
 """
-download_manager.py - HTTP download service for MicroPythonOS
+download_manager.py - HTTP download service for MushOS
 
 Provides synchronous and asynchronous HTTP downloads with flexible output modes:
 - Download to memory (returns bytes)
@@ -48,7 +48,7 @@ class DownloadManager:
         except Exception:
             pass
 
-        return "MicroPythonOS/{} (device={})".format(version, device)
+        return "MushOS/{} (device={})".format(version, device)
 
     @classmethod
     def _merge_headers(cls, headers=None):

@@ -1,5 +1,5 @@
 """
-WiFi Service for MicroPythonOS.
+WiFi Service for MushOS.
 
 Manages WiFi connections including:
 - Auto-connect to saved networks on boot
@@ -87,7 +87,7 @@ class WifiService:
         prefs = mpos.shared_preferences.SharedPreferences(HOTSPOT_PREFS_KEY)
         return {
             "enabled": prefs.get_bool("enabled", False),
-            "ssid": prefs.get_string("ssid", "MicroPythonOS"),
+            "ssid": prefs.get_string("ssid", "MushOS"),
             "password": prefs.get_string("password", ""),
             "authmode": prefs.get_string("authmode", None),
         }
