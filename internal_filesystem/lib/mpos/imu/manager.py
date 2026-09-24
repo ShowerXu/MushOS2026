@@ -36,6 +36,9 @@ class ImuManager:
         # 外部 SOC 温度来源（板级注册，见 register_soc_temperature_sensor）。
         # 保持 None 时本文件的行为与上游完全一致（用内置 esp32 MCU 温度）。
         self._soc_temperature_fn = None
+        # 注册后保留下来的 Sensor 对象本身 —— 读取路径直接返回它，
+        # 因为 _sensor_list 会被 _register_*_sensors() 整表替换（见那里的说明）。
+        self._external_soc_temp_sensor = None
 
     def init(self, i2c_bus, address=0x6B, mounted_position=FACING_SKY):
         self._i2c_bus = i2c_bus
@@ -247,29 +250,52 @@ class ImuManager:
 
         会移除已有的 SOC 温度条目，并把新条目插到列表最前，使
         get_default_sensor(TYPE_SOC_TEMPERATURE) 命中它（顶栏取温度就走这条路）。
+
+        ⚠️ 之后即使 `_register_qmi8658_sensors()` / `_register_wsen_isds_sensors()`
+        之类的函数整表替换了 `_sensor_list`（接上 I2C IMU 时走的就是它们），
+        这个来源也不会失联 —— 见 `_insert_external_soc_temp()`。
         """
         self._soc_temperature_fn = read_fn
-        self._sensor_list = [
-            s for s in self._sensor_list if s.type != TYPE_SOC_TEMPERATURE
-        ]
-        self._sensor_list.insert(
-            0,
-            Sensor(
-                name=name,
-                sensor_type=TYPE_SOC_TEMPERATURE,
-                vendor="external",
-                version=1,
-                max_range="-40°C to +125°C",
-                resolution=resolution,
-                power_ma=0,
-            ),
+        self._external_soc_temp_sensor = Sensor(
+            name=name,
+            sensor_type=TYPE_SOC_TEMPERATURE,
+            vendor="external",
+            version=1,
+            max_range="-40°C to +125°C",
+            resolution=resolution,
+            power_ma=0,
         )
+        self._insert_external_soc_temp()
+
+    def _insert_external_soc_temp(self):
+        """把外部 SOC 温度条目放回 _sensor_list 最前（可重复调用）。
+
+        ⚠️ 为什么需要它：`_register_qmi8658_sensors()` / `_register_wsen_isds_sensors()`
+        / `_register_bma423_sensors()` / `_register_mpu6886_sensors()` 都是
+        `self._sensor_list = [...]` —— **整表替换**。一旦有人在这些之后接上 IMU，
+        外部注册的这一项就会被抹掉；而它一旦消失，顶栏会**静默**退回
+        `TYPE_IMU_TEMPERATURE`（或板子没有温度源时的占位值），不再显示外部温度。
+        所以 get_sensor_list() 每次都补一次；读取路径另由 get_default_sensor()
+        直接返回对象本身兜底。
+        """
+        if self._external_soc_temp_sensor is None:
+            return
+        kept = [s for s in self._sensor_list if s.type != TYPE_SOC_TEMPERATURE]
+        kept.insert(0, self._external_soc_temp_sensor)
+        self._sensor_list = kept
 
     def get_sensor_list(self):
         self._ensure_imu_initialized()
+        # 列表可能刚被 _register_*_sensors() 整表替换过 -> 补回外部 SOC 温度条目
+        self._insert_external_soc_temp()
         return self._sensor_list.copy() if self._sensor_list else []
 
     def get_default_sensor(self, sensor_type):
+        if (sensor_type == TYPE_SOC_TEMPERATURE
+                and self._external_soc_temp_sensor is not None):
+            # 板级注册了外部 SOC 温度来源 -> 与列表无关地直接命中它。
+            # 只靠列表的话，接上 I2C IMU 后会静默失联（见 _insert_external_soc_temp）。
+            return self._external_soc_temp_sensor
         if self._initialized and sensor_type in (TYPE_ACCELEROMETER, TYPE_GYROSCOPE):
             self._ensure_imu_initialized()
 
