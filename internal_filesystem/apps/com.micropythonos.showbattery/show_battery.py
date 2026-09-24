@@ -121,8 +121,21 @@ class ShowBattery(Activity):
                 # Get "real-time" values by clearing the cache before reading
                 BatteryManager.clear_cache()
 
-            voltage = BatteryManager.read_battery_voltage()
-            percent = BatteryManager.get_battery_percentage()
+            # 电量读取**可能抛异常** —— 这是框架既有的约定：
+            #   battery_manager.read_raw_adc 的 docstring 里就写了 "Raises: RuntimeError"
+            #   （例如 ADC2 被 WiFi 占用；或本板的电池电压由 PY32 从机经 UART 上报、
+            #    而从机不在线）。这里不接住的话，异常会从 1s 周期的 LVGL 定时器
+            #    回调里抛出来，而且每秒一次。
+            try:
+                voltage = BatteryManager.read_battery_voltage()
+                percent = BatteryManager.get_battery_percentage()
+                raw_adc = BatteryManager.read_raw_adc()
+            except Exception as e:
+                self.lbl_battery.set_text("--.--V --%")
+                self.lbl_battery.set_style_text_color(lv.color_hex(0x808080), 0)
+                self.lbl_battery_raw.set_text("Raw ADC: n/a")
+                print("showbattery: battery read unavailable: %s" % e)
+                return
 
             if percent > 80:
                 symbol = lv.SYMBOL.BATTERY_FULL
@@ -142,7 +155,7 @@ class ShowBattery(Activity):
                 bg_color = lv.PALETTE.RED
             self.lbl_battery.set_style_text_color(lv.palette_main(bg_color), 0)
 
-            self.lbl_battery_raw.set_text(f"Raw ADC: {BatteryManager.read_raw_adc()}")
+            self.lbl_battery_raw.set_text(f"Raw ADC: {raw_adc}")
 
             # --- HISTORY GRAPH ---
             self.history_v.append(voltage)

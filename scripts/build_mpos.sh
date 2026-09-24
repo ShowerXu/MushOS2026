@@ -98,11 +98,17 @@ if [ -z "$target" ]; then
     echo "Example: $0 esp32-small"
     echo "Example: $0 esp32s3"
     echo "Example: $0 unphone"
+    echo "Example: $0 mushos"
     echo "Example: $0 lilygo_t4"
     echo "Example: $0 clean"
 	exit 1
 fi
 
+# mushos 是 unphone 的别名：同一硬件（ESP32_GENERIC_S3 / SPIRAM_OCT / flash_size=8 / 无 OTA）。
+# 归一化后走 unphone 分支，避免后续到处判断两个名字。
+if [ "$target" == "mushos" ]; then
+	target="unphone"
+fi
 
 if [ "$target" == "clean" ]; then
 	rm -rf "$mydir"/../lvgl_micropython/lib/micropython/ports/unix/build-standard/

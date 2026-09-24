@@ -2,7 +2,7 @@
 #
 # Hardware initialization for MushBot — a custom ESP32-S3 dev board running MushOS.
 # MCU: ESP32-S3 (ESP32S3R8: 8MB Octal PSRAM), 8MB Flash
-# Display: ST7789, 240x240, SPI
+# Display: ST7789, 320x240 (横向使用; 面板原生 240x320), SPI
 #
 # >>> 把下面的引脚常量改成你开发板原理图上的实际连线 <<<
 # 改完用 REPL (CTRL-E) 手动试，确认屏幕亮、颜色对，再固化到此文件。
@@ -43,9 +43,29 @@ LCD_CS   = PIN_CS
 LCD_RST  = PIN_RST
 LCD_BL   = PIN_BL
 
-# 分辨率
-TFT_WIDTH = const(240)
-TFT_HEIGHT = const(240)
+# ===================== 分辨率 =====================
+# 面板: ST7789，可视区 320x240（横向使用）。
+#
+# ⚠️ ST7789 的显存是**固定**的 240 列 x 320 行，所以"320x240"是**横向**用法，
+#    必须分两步做，不能直接把 display_width 写成 320：
+#      ① 按原生方向创建驱动 —— display_width=240, display_height=320；
+#      ② 再用 set_rotation() 让 LVGL 把横向/纵向分辨率对调 → 逻辑 320x240。
+#    若反过来写 display_width=320 / display_height=240，超出行/列范围的像素
+#    会被静默丢弃（表现为画面右侧或底部被裁掉、错位），而不是报错。
+#
+#    参考同仓库的 ST7789 320x240 板：matouch_esp32_s3_spi_ips_2_8_*.py
+#    （它按原生 240x320 创建，用竖屏；本板要横屏，所以额外加一次旋转）
+TFT_NATIVE_WIDTH  = const(240)   # ST7789 原生列数（硬件固定，不要改）
+TFT_NATIVE_HEIGHT = const(320)   # ST7789 原生行数（硬件固定，不要改）
+
+# 逻辑方向: 目标 320x240 横向
+#   · 画面上下/左右颠倒  -> 把 _90 改成 _270
+#   · 画面变成 240x320 竖屏 -> 这行没生效（set_rotation 必须在 init() 之后调用）
+#   · 只要竖屏 240x320      -> 直接删掉下面那次 set_rotation() 调用即可
+DISPLAY_ROTATION = lv.DISPLAY_ROTATION._90
+
+TFT_WIDTH  = TFT_NATIVE_WIDTH     # 传给驱动的宽度 = 原生列数
+TFT_HEIGHT = TFT_NATIVE_HEIGHT    # 传给驱动的高度 = 原生行数
 
 # ===================== Step 1: SPI 总线 + 显示总线 =====================
 if __debug__:
@@ -68,8 +88,11 @@ display_bus = lcd_bus.SPIBus(
     spi_mode=3,  # ST7789 用 SPI mode 3（CPOL=1,CPHA=1），匹配 Arduino_GFX 的 SPI_MODE3
 )
 
-# 一帧 240*240*2 = 115200 字节；双缓冲各取一部分，按可用内存微调
-_BUFFER_SIZE = const(240 * 40 * 2)  # 19200
+# 局部刷新缓冲: 320(逻辑宽) * 30 行 * 2 字节 = 19200 B
+#   注意 19200 同时整除 240*2（=40 原生行）与 320*2（=30 逻辑行），
+#   所以旋转前后都不需要改这个数字；一帧完整画面 320*240*2 = 153600 B，
+#   双缓冲不可能整屏放下（内部 RAM 不够），必须用局部缓冲。
+_BUFFER_SIZE = const(320 * 30 * 2)  # 19200
 fb1 = display_bus.allocate_framebuffer(_BUFFER_SIZE, lcd_bus.MEMORY_INTERNAL | lcd_bus.MEMORY_DMA)
 fb2 = display_bus.allocate_framebuffer(_BUFFER_SIZE, lcd_bus.MEMORY_INTERNAL | lcd_bus.MEMORY_DMA)
 
@@ -102,9 +125,14 @@ mpos.ui.main_display.init()
 mpos.ui.main_display.set_power(True)
 mpos.ui.main_display.set_backlight(100)
 
-# 方向 / 镜像：若画面方向不对，调整旋转或 MADCTL 位
-# mpos.ui.main_display.set_rotation(lv.DISPLAY_ROTATION._0)
-# mpos.ui.main_display.set_params(0x36, bytearray([0x00]))
+# 方向 / 镜像: 旋转成 320x240 横向
+#   ⚠️ 必须在 init() 之后调用 —— set_rotation() 通过 _on_size_change 回调
+#      重算 MADCTL，驱动未初始化时这次写不会生效（画面会停在竖屏 240x320）。
+mpos.ui.main_display.set_rotation(DISPLAY_ROTATION)
+
+# 若旋转对了但颜色/镜像仍不对，再手工调 MADCTL（0x36）。常用位：
+#   0x00 正常 | 0x60 MV|MX | 0xC0 MY|MX | 0xA0 MV|MY
+# mpos.ui.main_display.set_params(0x36, bytearray([0x60]))
 
 # ===================== Step 2: 输入设备（可选，按需打开） =====================
 # --- 电阻/电容触摸示例（CST816S）---
@@ -116,19 +144,28 @@ mpos.ui.main_display.set_backlight(100)
 # indev = cst816s.CST816S(touch_dev)
 # InputManager.register_indev(indev)
 
-# --- 物理按键示例（KEYPAD）---
-# from mpos import InputManager
-# btn = Pin(0, Pin.IN, Pin.PULL_UP)
-# def keypad_read_cb(indev, data):
-#     data.key = lv.KEY.ENTER
-#     data.state = lv.INDEV_STATE.PRESSED if btn.value() == 0 else lv.INDEV_STATE.RELEASED
-# indev = lv.indev_create()
-# indev.set_type(lv.INDEV_TYPE.KEYPAD)
-# indev.set_read_cb(keypad_read_cb)
-# indev.set_group(lv.group_get_default())
-# indev.set_display(lv.display_get_default())
-# indev.enable(True)
-# InputManager.register_indev(indev)
+# --- PY32F002A 扩展按键板（UART1: G01/G02）---
+# 4 键菜单导航 + 电池电压(÷3) + 芯片温度。详见 docs/MushOS-按键扩展方案.md
+# 协议以 docs/MushPad_UART_Protocol.md（ICD v1.0 Rev B，冻结）为准。
+# PY32 未烧录/未接线时不影响显示：按键位图保持 0，电量图标保持隐藏
+# （电压未就绪时 _bridge_battery 抛异常，topmenu 会接住并跳过本次更新）。
+from mpos.board import py32_keypad
+py32_keypad.init(enable_battery=True)
+
+# 把 PY32 的芯片温度接进系统顶栏：顶栏温度走 SensorManager.TYPE_SOC_TEMPERATURE
+# （见 mpos/ui/topmenu.py），这里把该来源换成 PY32 上报的温度。
+# 温度无效(ICD §8.3 的 0x8000)或尚未就绪时 get_temperature() 返回 None ->
+# 顶栏显示 "--°C"；不会去显示 ESP32 自己的 MCU 温度，也不会显示占位值。
+from mpos import SensorManager
+SensorManager.register_soc_temperature_sensor(
+    "PY32 Keypad Temperature", py32_keypad.get_temperature
+)
+
+# --- SmartPort PY32F002A-SOP8（I2C1: G04/G05）---
+# 电机 PWM / ADC / GPIO 扩展端口。详见 docs/MushOS-SmartPort_I2C与IAP.md
+# 协议兼容 docs/COMMUNICATION_PROTOCOL.md 第二部分。无端口时不影响系统。
+from mpos.board import py32_smartport
+smartport_manager = py32_smartport.init(start_poll=True)
 
 if __debug__:
     logger.debug("mushbot.py finished")

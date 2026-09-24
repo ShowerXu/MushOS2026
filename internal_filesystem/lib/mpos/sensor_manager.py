@@ -117,6 +117,25 @@ class SensorManager:
         self._initialized = self._imu_manager.init_mock(motion=motion)
         return self._initialized
 
+    def register_soc_temperature_sensor(self, name, read_fn):
+        """注册一个外部 SOC 温度来源（板级用），顶栏温度随之改为读它。
+
+        适用场景：板子的 SOC 温度不直接可得，或希望显示外部从机上报的温度。
+        例（MushBot 板级文件，见 docs/MushOS-按键扩展方案.md）：
+
+            from mpos import SensorManager
+            SensorManager.register_soc_temperature_sensor(
+                "PY32 Keypad Temperature", py32_keypad.get_temperature)
+
+        read_fn 返回 None（温度无效/尚未就绪）时顶栏显示 "--°C"。
+
+        注册后 is_available() 即为 True —— 顶栏温度只依赖这一个来源，不需要
+        再调 init()/init_mock()。没有 IMU 的板子用这条路径最省事。
+        """
+        self._ensure_imu_manager()
+        self._imu_manager.register_soc_temperature_sensor(name, read_fn)
+        self._initialized = True
+
     def _ensure_imu_manager(self):
         if self._imu_manager is None:
             self._imu_manager = ImuManager()
@@ -278,7 +297,7 @@ _original_methods = {}
 _methods_to_delegate = [
     'init', 'init_iio', 'init_mock', 'is_available', 'get_sensor_list', 'get_default_sensor',
     'read_sensor', 'read_sensor_once', 'calibrate_sensor', 'check_calibration_quality',
-    'check_stationarity'
+    'check_stationarity', 'register_soc_temperature_sensor'
 ]
 
 for method_name in _methods_to_delegate:

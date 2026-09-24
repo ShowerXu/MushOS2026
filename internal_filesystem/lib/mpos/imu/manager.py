@@ -33,6 +33,9 @@ class ImuManager:
         self._i2c_address = None
         self._mounted_position = FACING_SKY
         self._has_mcu_temperature = False
+        # 外部 SOC 温度来源（板级注册，见 register_soc_temperature_sensor）。
+        # 保持 None 时本文件的行为与上游完全一致（用内置 esp32 MCU 温度）。
+        self._soc_temperature_fn = None
 
     def init(self, i2c_bus, address=0x6B, mounted_position=FACING_SKY):
         self._i2c_bus = i2c_bus
@@ -230,6 +233,38 @@ class ImuManager:
     def is_available(self):
         return self._initialized
 
+    def register_soc_temperature_sensor(self, name, read_fn, resolution="1°C"):
+        """把 SOC 温度交给外部回调提供（板级用；覆盖内置的 esp32 MCU 温度）。
+
+        典型场景：SOC 温度不直接可得，或更希望显示外部从机上报的温度。
+        例：MushBot 的按键板 PY32 经 UART1 上报自己的芯片温度，见
+        docs/MushOS-按键扩展方案.md。
+
+        Args:
+            name: 显示名（会出现在 get_sensor_list() 里）
+            read_fn: 无参回调，返回 float ℃；暂不可用/无效时返回 None
+            resolution: 分辨率描述（仅元数据）
+
+        会移除已有的 SOC 温度条目，并把新条目插到列表最前，使
+        get_default_sensor(TYPE_SOC_TEMPERATURE) 命中它（顶栏取温度就走这条路）。
+        """
+        self._soc_temperature_fn = read_fn
+        self._sensor_list = [
+            s for s in self._sensor_list if s.type != TYPE_SOC_TEMPERATURE
+        ]
+        self._sensor_list.insert(
+            0,
+            Sensor(
+                name=name,
+                sensor_type=TYPE_SOC_TEMPERATURE,
+                vendor="external",
+                version=1,
+                max_range="-40°C to +125°C",
+                resolution=resolution,
+                power_ma=0,
+            ),
+        )
+
     def get_sensor_list(self):
         self._ensure_imu_initialized()
         return self._sensor_list.copy() if self._sensor_list else []
@@ -260,6 +295,9 @@ class ImuManager:
             if self._imu_driver:
                 return self._imu_driver.read_temperature()
         elif sensor.type == TYPE_SOC_TEMPERATURE:
+            # 板级注册的外部来源优先（例如接在 UART 上的从机 MCU 上报的温度）
+            if self._soc_temperature_fn is not None:
+                return self._soc_temperature_fn()
             if self._has_mcu_temperature:
                 import esp32
 
